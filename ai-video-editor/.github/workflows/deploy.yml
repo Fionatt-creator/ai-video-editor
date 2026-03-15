@@ -17,11 +17,9 @@ jobs:
           
       - name: Install dependencies
         run: npm ci
-        working-directory: ai-video-editor-mvp
         
       - name: Build
         run: npm run build
-        working-directory: ai-video-editor-mvp
         
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
@@ -29,4 +27,4 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ai-video-editor-mvp/dist
+          working-directory: ./dist

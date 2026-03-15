@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 剪辑助手 - 原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 通用样式 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        /* 页面切换 */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(10,10,15,0.8);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-steps {
+            display: flex;
+            gap: 40px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+        
+        .step.active {
+            color: #667eea;
+        }
+        
+        .step.completed {
+            color: #10b981;
+        }
+        
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .step.active .step-num {
+            background: #667eea;
+        }
+        
+        .step.completed .step-num {
+            background: #10b981;
+        }
+        
+        /* 页面1: 上传 */
+        .upload-page {
+            padding-top: 100px;
+            text-align: center;
+        }
+        
+        .upload-zone {
+            width: 600px;
+            height: 400px;
+            margin: 60px auto;
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        .upload-text {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+        
+        /* 页面2: AI配置 */
+        .config-page {
+            padding-top: 100px;
+        }
+        
+        .config-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .config-title {
+            font-size: 32px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .config-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .config-label {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .option-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .option {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        .config-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+        }
+        
+        /* 页面3: AI处理中 */
+        .processing-page {
+            padding-top: 100px;
+            text-align: center;
+        }
+        
+        .processing-container {
+            max-width: 600px;
+            margin: 60px auto;
+        }
+        
+        .progress-ring {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+        
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.1);
+            stroke-width: 8;
+        }
+        
+        .progress-ring-fill {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+        }
+        
+        .processing-status {
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .processing-detail {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+        }
+        
+        .processing-steps {
+            margin-top: 40px;
+            text-align: left;
+        }
+        
+        .processing-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .processing-step.active {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .processing-step.completed {
+            color: #10b981;
+        }
+        
+        .step-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* 页面4: 人工精修 */
+        .editor-page {
+            padding-top: 80px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .editor-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .preview-area {
+            flex: 1;
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .preview-placeholder {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+        }
+        
+        .timeline-area {
+            height: 200px;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .timeline-scale {
+            display: flex;
+            gap: 40px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .timeline-track {
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .clip {
+            position: absolute;
+            height: 60px;
+            top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .clip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .clip.selected {
+            box-shadow: 0 0 0 2px #fff;
+        }
+        
+        .clip-1 { left: 0; width: 120px; }
+        .clip-2 { left: 130px; width: 100px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .clip-3 { left: 240px; width: 140px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .clip-4 { left: 390px; width: 90px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        
+        .playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ff0000;
+            left: 200px;
+            pointer-events: none;
+        }
+        
+        .playhead::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -4px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #ff0000;
+        }
+        
+        .editor-right {
+            width: 320px;
+            padding: 20px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .clip-list {
+            margin-bottom: 24px;
+        }
+        
+        .clip-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clip-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .clip-item.selected {
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        .clip-thumb {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .clip-info {
+            flex: 1;
+        }
+        
+        .clip-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .clip-duration {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .clip-score {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tool-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .tool-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .tool-btn.primary {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .tool-btn.primary:hover {
+            background: #5a6fd6;
+        }
+        
+        /* 页面5: 导出 */
+        .export-page {
+            padding-top: 100px;
+            text-align: center;
+        }
+        
+        .export-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .export-formats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .format-card {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .format-card:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateY(-4px);
+        }
+        
+        .format-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .format-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .format-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .format-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .export-settings {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-size: 14px;
+        }
+        
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .toggle {
+            width: 48px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .toggle.active {
+            background: #667eea;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        
+        .toggle.active::after {
+            left: 26px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG 渐变定义 -->
+    <svg width="0" height="0">
+        <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#667eea"/>
+                <stop offset="100%" style="stop-color:#764ba2"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="logo">✂️ AI 剪辑助手</div>
+        <div class="nav-steps">
+            <div class="step active" id="step1">
+                <div class="step-num">1</div>
+                <span>上传素材</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-num">2</div>
+                <span>AI 配置</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-num">3</div>
+                <span>智能剪辑</span>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-num">4</div>
+                <span>人工精修</span>
+            </div>
+            <div class="step" id="step5">
+                <div class="step-num">5</div>
+                <span>导出成片</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面1: 上传 -->
+    <div class="page active" id="page1">
+        <div class="upload-page">
+            <h1 style="font-size: 36px; margin-bottom: 16px;">开始创作</h1>
+            <p style="color: rgba(255,255,255,0.5); margin-bottom: 40px;">拖拽视频到下方，或点击选择文件</p>
+            
+            <div class="upload-zone" onclick="nextPage(2)">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽上传视频</div>
+                <div class="upload-hint">支持 MP4, MOV, AVI 格式，最大 2GB</div>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <h3 style="font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 20px;">最近项目</h3>
+                <div style="display: flex; gap: 16px; justify-content: center;">
+                    <div style="width: 160px; height: 90px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.4);">项目 1</div>
+                    <div style="width: 160px; height: 90px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.4);">项目 2</div>
+                    <div style="width: 160px; height: 90px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.4);">项目 3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面2: AI配置 -->
+    <div class="page" id="page2">
+        <div class="config-page">
+            <div class="config-container">
+                <h1 class="config-title">🎯 AI 剪辑配置</h1>
+                
+                <div class="config-section">
+                    <label class="config-label">内容类型</label>
+                    <div class="option-group">
+                        <div class="option selected" onclick="selectOption(this)">🎬 影视解说</div>
+                        <div class="option" onclick="selectOption(this)">📚 知识课程</div>
+                        <div class="option" onclick="selectOption(this)">🎮 游戏解说</div>
+                        <div class="option" onclick="selectOption(this)">📝 Vlog 日常</div>
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <label class="config-label">目标时长</label>
+                    <div class="option-group">
+                        <div class="option" onclick="selectOption(this)">1 分钟</div>
+                        <div class="option selected" onclick="selectOption(this)">3 分钟</div>
+                        <div class="option" onclick="selectOption(this)">5 分钟</div>
+                        <div class="option" onclick="selectOption(this)">保持原时长</div>
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <label class="config-label">输出格式</label>
+                    <div class="option-group">
+                        <div class="option selected" onclick="selectOption(this)">📱 竖屏 (9:16)</div>
+                        <div class="option" onclick="selectOption(this)">💻 横屏 (16:9)</div>
+                        <div class="option" onclick="selectOption(this)">⬜ 方形 (1:1)</div>
+                        <div class="option" onclick="selectOption(this)">✨ 全部生成</div>
+                    </div>
+                </div>
+                
+                <div class="config-section">
+                    <label class="config-label">智能选项</label>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #667eea;">
+                            <span>自动删除静音片段</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #667eea;">
+                            <span>自动识别高光片段</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #667eea;">
+                            <span>自动生成字幕</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" style="width: 18px; height: 18px; accent-color: #667eea;">
+                            <span>智能背景音乐匹配</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="config-actions">
+                    <button class="btn btn-secondary" onclick="prevPage(1)">返回</button>
+                    <button class="btn btn-primary" onclick="startProcessing()">开始 AI 剪辑</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面3: AI处理中 -->
+    <div class="page" id="page3">
+        <div class="processing-page">
+            <div class="processing-container">
+                <div class="progress-ring">
+                    <svg width="200" height="200">
+                        <circle class="progress-ring-bg" cx="100" cy="100" r="90"/>
+                        <circle class="progress-ring-fill" cx="100" cy="100" r="90" 
+                                stroke-dasharray="565.48" stroke-dashoffset="565.48" id="progressCircle"/>
+                    </svg>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                
+                <div class="processing-status" id="processingStatus">正在分析视频内容...</div>
+                <div class="processing-detail">预计剩余时间: 2 分钟</div>
+                
+                <div class="processing-steps">
+                    <div class="processing-step completed">
+                        <span class="step-icon">✓</span>
+                        <span>上传完成</span>
+                    </div>
+                    <div class="processing-step active" id="stepVoice">
+                        <span class="step-icon">🎤</span>
+                        <span>语音识别转文字</span>
+                    </div>
+                    <div class="processing-step" id="stepHighlight">
+                        <span class="step-icon">✨</span>
+                        <span>识别高光片段</span>
+                    </div>
+                    <div class="processing-step" id="stepTimeline">
+                        <span class="step-icon">🎞️</span>
+                        <span>生成初版时间线</span>
+                    </div>
+                    <div class="processing-step" id="stepSubtitle">
+                        <span class="step-icon">📝</span>
+                        <span>生成字幕</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面4: 人工精修 -->
+    <div class="page" id="page4">
+        <div class="editor-page">
+            <div class="editor-main">
+                <div class="editor-left">
+                    <div class="preview-area">
+                        <div class="preview-placeholder">
+                            <div style="font-size: 64px; margin-bottom: 20px;">▶️</div>
+                            <div>点击播放预览</div>
+                            <div style="font-size: 14px; margin-top: 10px; opacity: 0.5;">00:00 / 03:45</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-area">
+                        <div class="timeline-header">
+                            <span style="font-size: 14px; font-weight: 600;">时间轴</span>
+                            <div class="timeline-scale">
+                                <span>00:00</span>
+                                <span>01:00</span>
+                                <span>02:00</span>
+                                <span>03:00</span>
+                            </div>
+                        </div>
+                        <div class="timeline-track">
+                            <div class="clip clip-1 selected" onclick="selectClip(this)">片段1</div>
+                            <div class="clip clip-2" onclick="selectClip(this)">片段2</div>
+                            <div class="clip clip-3" onclick="selectClip(this)">片段3</div>
+                            <div class="clip clip-4" onclick="selectClip(this)">片段4</div>
+                            <div class="playhead"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="editor-right">
+                    <div class="panel-title">🎬 片段列表</div>
+                    <div class="clip-list">
+                        <div class="clip-item selected" onclick="selectClipItem(this)">
+                            <div class="clip-thumb"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">高光片段 1</div>
+                                <div class="clip-duration">00:00 - 00:45</div>
+                            </div>
+                            <div class="clip-score">95分</div>
+                        </div>
+                        <div class="clip-item" onclick="selectClipItem(this)">
+                            <div class="clip-thumb" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">高光片段 2</div>
+                                <div class="clip-duration">00:52 - 01:28</div>
+                            </div>
+                            <div class="clip-score">88分</div>
+                        </div>
+                        <div class="clip-item" onclick="selectClipItem(this)">
+                            <div class="clip-thumb" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">高光片段 3</div>
+                                <div class="clip-duration">01:35 - 02:20</div>
+                            </div>
+                            <div class="clip-score">82分</div>
+                        </div>
+                        <div class="clip-item" onclick="selectClipItem(this)">
+                            <div class="clip-thumb" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">高光片段 4</div>
+                                <div class="clip-duration">02:25 - 02:55</div>
+                            </div>
+                            <div class="clip-score">78分</div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-title">🗑️ 已删除片段</div>
+                    <div class="clip-list">
+                        <div class="clip-item" style="opacity: 0.5;">
+                            <div class="clip-thumb" style="background: #444;"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">静音片段</div>
+                                <div class="clip-duration">00:46 - 00:51</div>
+                            </div>
+                        </div>
+                        <div class="clip-item" style="opacity: 0.5;">
+                            <div class="clip-thumb" style="background: #444;"></div>
+                            <div class="clip-info">
+                                <div class="clip-name">语气词片段</div>
+                                <div class="clip-duration">01:29 - 01:34</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toolbar">
+                <button class="tool-btn">⏮️ 撤销</button>
+                <button class="tool-btn">⏭️ 恢复</button>
+                <button class="tool-btn">✂️ 分割</button>
+                <button class="tool-btn">🗑️ 删除</button>
+                <button class="tool-btn">🎬 转场</button>
+                <button class="tool-btn">📝 字幕</button>
+                <div style="flex: 1;"></div>
+                <button class="tool-btn" onclick="prevPage(3)">返回</button>
+                <button class="tool-btn primary" onclick="nextPage(5)">导出成片 →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面5: 导出 -->
+    <div class="page" id="page5">
+        <div class="export-page">
+            <div class="export-container">
+                <h1 style="font-size: 32px; margin-bottom: 16px;">🎉 编辑完成！</h1>
+                <p style="color: rgba(255,255,255,0.5); margin-bottom: 40px;">选择导出格式和设置</p>
+                
+                <div class="export-formats">
+                    <div class="format-card selected" onclick="selectFormat(this)">
+                        <div class="format-icon">📱</div>
+                        <div class="format-name">竖屏版</div>
+                        <div class="format-desc">9:16 比例<br>适合抖音/视频号</div>
+                    </div>
+                    <div class="format-card" onclick="selectFormat(this)">
+                        <div class="format-icon">💻</div>
+                        <div class="format-name">横屏版</div>
+                        <div class="format-desc">16:9 比例<br>适合 B站/YouTube</div>
+                    </div>
+                    <div class="format-card" onclick="selectFormat(this)">
+                        <div class="format-icon">⬜</div>
+                        <div class="format-name">方形版</div>
+                        <div class="format-desc">1:1 比例<br>适合小红书/朋友圈</div>
+                    </div>
+                </div>
+                
+                <div class="export-settings">
+                    <div class="setting-row">
+                        <span class="setting-label">视频分辨率</span>
+                        <div class="setting-value">
+                            <select style="padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff;">
+                                <option>1080p (推荐)</option>
+                                <option>720p</option>
+                                <option>4K</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">视频格式</span>
+                        <div class="setting-value">
+                            <select style="padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff;">
+                                <option>MP4 (推荐)</option>
+                                <option>MOV</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">包含字幕</span>
+                        <div class="setting-value">
+                            <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">包含水印</span>
+                        <div class="setting-value">
+                            <div class="toggle" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 40px;">
+                    <button class="btn btn-secondary" onclick="prevPage(4)">返回编辑</button>
+                    <button class="btn btn-primary" style="padding: 16px 48px; font-size: 16px;">开始导出</button>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981; font-size: 14px;">
+                    💡 本次剪辑为您节省了约 2.5 小时！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        
+        function nextPage(page) {
+            document.getElementById(`page${currentPage}`).classList.remove('active');
+            document.getElementById(`page${page}`).classList.add('active');
+            
+            // 更新步骤状态
+            document.getElementById(`step${currentPage}`).classList.remove('active');
+            document.getElementById(`step${currentPage}`).classList.add('completed');
+            if (page <= 5) {
+                document.getElementById(`step${page}`).classList.add('active');
+            }
+            
+            currentPage = page;
+            
+            if (page === 3) {
+                simulateProcessing();
+            }
+        }
+        
+        function prevPage(page) {
+            document.getElementById(`page${currentPage}`).classList.remove('active');
+            document.getElementById(`page${page}`).classList.add('active');
+            
+            document.getElementById(`step${currentPage}`).classList.remove('active');
+            document.getElementById(`step${page}`).classList.remove('completed');
+            document.getElementById(`step${page}`).classList.add('active');
+            
+            currentPage = page;
+        }
+        
+        function startProcessing() {
+            nextPage(3);
+        }
+        
+        function simulateProcessing() {
+            let progress = 0;
+            const circle = document.getElementById('progressCircle');
+            const text = document.getElementById('progressText');
+            const circumference = 565.48;
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 3;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => nextPage(4), 500);
+                }
+                
+                const offset = circumference - (progress / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                text.textContent = Math.floor(progress) + '%';
+                
+                // 更新步骤状态
+                if (progress > 20) {
+                    document.getElementById('stepVoice').classList.add('completed');
+                    document.getElementById('stepVoice').classList.remove('active');
+                    document.getElementById('stepHighlight').classList.add('active');
+                }
+                if (progress > 50) {
+                    document.getElementById('stepHighlight').classList.add('completed');
+                    document.getElementById('stepHighlight').classList.remove('active');
+                    document.getElementById('stepTimeline').classList.add('active');
+                }
+                if (progress > 75) {
+                    document.getElementById('stepTimeline').classList.add('completed');
+                    document.getElementById('stepTimeline').classList.remove('active');
+                    document.getElementById('stepSubtitle').classList.add('active');
+                }
+                if (progress > 90) {
+                    document.getElementById('stepSubtitle').classList.add('completed');
+                    document.getElementById('stepSubtitle').classList.remove('active');
+                }
+            }, 100);
+        }
+        
+        function selectOption(element) {
+            const parent = element.parentElement;
+            parent.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function selectClip(element) {
+            document.querySelectorAll('.clip').forEach(clip => clip.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function selectClipItem(element) {
+            document.querySelectorAll('.clip-item').forEach(item => item.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function selectFormat(element) {
+            document.querySelectorAll('.format-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
