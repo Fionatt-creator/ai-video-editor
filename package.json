@@ -1,8 +1,0 @@
-{
-  "name": "ai-video-editor-prototype",
-  "version": "1.0.0",
-  "description": "AI Video Editor Prototype",
-  "scripts": {
-    "start": "npx serve ."
-  }
-}
