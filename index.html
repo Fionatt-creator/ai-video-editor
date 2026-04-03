@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace 文件浏览器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>📁 Workspace 文件浏览器</h1>
+        <div class="path-bar">/root/.openclaw/workspace</div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <ul class="file-tree" id="fileTree"></ul>
+        </div>
+        
+        <div class="content" id="content">
+            <div class="welcome">
+                <h2>👋 欢迎</h2>
+                <p>点击左侧文件树浏览 workspace 中的文件。</p>
+                <p class="hint">支持 Markdown、Python、JavaScript、JSON 等格式预览</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
