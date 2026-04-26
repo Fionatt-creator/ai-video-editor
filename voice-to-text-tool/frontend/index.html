@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音转文字工具 | Voice to Text</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microphone-alt"></i>
+                <h1>语音转文字工具</h1>
+            </div>
+            <p class="subtitle">基于 FunASR 的智能语音识别，支持 LLM 重点提取</p>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 上传区域 -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>拖拽音频文件到此处</h3>
+                    <p>或 <span class="upload-link">点击选择文件</span></p>
+                    <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.ogg,.flac,.aac,.wma" hidden>
+                    <div class="supported-formats">
+                        <span>支持格式:</span>
+                        <span class="format-tag">MP3</span>
+                        <span class="format-tag">WAV</span>
+                        <span class="format-tag">M4A</span>
+                        <span class="format-tag">OGG</span>
+                        <span class="format-tag">FLAC</span>
+                        <span class="format-tag">AAC</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 进度区域 -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <div class="file-info">
+                        <i class="fas fa-file-audio"></i>
+                        <span id="fileName">filename.mp3</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-status">
+                        <span id="progressText">正在上传...</span>
+                        <span class="spinner" id="spinner"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 结果区域 -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <!-- 标签页 -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="transcription">
+                        <i class="fas fa-align-left"></i> 转写内容
+                    </button>
+                    <button class="tab-btn" data-tab="summary" id="summaryTab">
+                        <i class="fas fa-lightbulb"></i> 重点提取
+                    </button>
+                </div>
+
+                <!-- 转写内容面板 -->
+                <div class="tab-panel active" id="transcriptionPanel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-file-alt"></i> 转写结果</h3>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary" id="editBtn">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a href="#" data-format="txt"><i class="fas fa-file-alt"></i> 导出 TXT</a>
+                                    <a href="#" data-format="srt"><i class="fas fa-closed-captioning"></i> 导出 SRT</a>
+                                    <a href="#" data-format="json"><i class="fas fa-code"></i> 导出 JSON</a>
+                                    <a href="#" data-format="docx"><i class="fas fa-file-word"></i> 导出 Word</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-editor">
+                        <textarea id="transcriptionText" readonly></textarea>
+                    </div>
+                    <div class="word-count">
+                        <span id="charCount">0</span> 字符 | 
+                        <span id="wordCount">0</span> 词
+                    </div>
+                </div>
+
+                <!-- 重点提取面板 -->
+                <div class="tab-panel" id="summaryPanel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-lightbulb"></i> 内容摘要</h3>
+                        <div class="panel-actions">
+                            <select id="summaryType" class="select">
+                                <option value="key_points">关键要点</option>
+                                <option value="abstract">内容摘要</option>
+                                <option value="chapters">章节大纲</option>
+                            </select>
+                            <button class="btn btn-primary" id="generateSummaryBtn">
+                                <i class="fas fa-magic"></i> 生成摘要
+                            </button>
+                        </div>
+                    </div>
+                    <div class="summary-content" id="summaryContent">
+                        <div class="empty-state">
+                            <i class="fas fa-robot"></i>
+                            <p>点击"生成摘要"按钮，AI 将自动提取重点内容</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 历史记录 -->
+            <section class="history-section" id="historySection">
+                <h3><i class="fas fa-history"></i> 最近任务</h3>
+                <div class="history-list" id="historyList">
+                    <!-- 动态生成 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>Powered by FunASR & Kimi LLM</p>
+        </footer>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

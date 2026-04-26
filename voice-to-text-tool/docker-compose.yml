@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  voice-to-text:
+    build: .
+    container_name: voice-to-text-tool
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./exports:/app/exports
+      - ./uploads:/app/uploads
+      - model-cache:/root/.cache/modelscope
+    environment:
+      - PYTHONUNBUFFERED=1
+      # 可选: 配置 Kimi API Key 以使用 LLM 功能
+      # - KIMI_API_KEY=your_api_key_here
+      # - LLM_MODEL=kimi-k2.5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  model-cache:
+    driver: local
